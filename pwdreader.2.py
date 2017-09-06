@@ -157,15 +157,15 @@ def printEntries(entries, client):
         print('-------------')
         entry_id = k
 
-        plain_nonce = getDecryptedNonce(client, entries[entry_id])
+        # plain_nonce = getDecryptedNonce(client, entries[entry_id])
 
-        pwdArr = entries[entry_id]['password']['data']
-        pwdHex = ''.join([ hex(x)[2:].zfill(2) for x in pwdArr ])
-        print('password: ', decryptEntryValue(plain_nonce, unhexlify(pwdHex)))
+        # pwdArr = entries[entry_id]['password']['data']
+        # pwdHex = ''.join([ hex(x)[2:].zfill(2) for x in pwdArr ])
+        # print('password: ', decryptEntryValue(plain_nonce, unhexlify(pwdHex)))
 
-        safeNoteArr = entries[entry_id]['safe_note']['data']
-        safeNoteHex = ''.join([ hex(x)[2:].zfill(2) for x in safeNoteArr ])
-        print('safe_note:', decryptEntryValue(plain_nonce, unhexlify(safeNoteHex)))
+        # safeNoteArr = entries[entry_id]['safe_note']['data']
+        # safeNoteHex = ''.join([ hex(x)[2:].zfill(2) for x in safeNoteArr ])
+        # print('safe_note:', decryptEntryValue(plain_nonce, unhexlify(safeNoteHex)))
         
         for kk, vv in v.items():
             if kk in ['nonce', 'safe_note', 'password']: continue # skip these fields
