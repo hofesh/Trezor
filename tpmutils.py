@@ -44,32 +44,59 @@ def getFileEncKey(key):
     filename = digest + '.pswd'
     return [filename, filekey, enckey]
 
-# File level decryption and file reading
+# def encryptStorageRaw(f, jsonData, key):
+#     cipherkey = unhexlify(key)
+    
+#     iv = os.urandom(12)
+#     #tag = os.urandom(16)
+#     f.write(iv)
+#     cipher = Cipher(algorithms.AES(cipherkey), modes.GCM(iv), backend=default_backend())
+#     encryptor = cipher.encryptor()
+#     block = ''
+#     offest = 0
+#     res = ''
+#     while True:
+#         block = jsonData[offest:offest+16]
+#         if len(block) == 0:
+#             break
+#         offest = offest + 16
+#         block = encryptor.update(block)
+#         res = res + block
+#     # throws exception when the tag is wrong
+#     res = res + encryptor.finalize()
+
+#     f.write(encryptor.tag)
+#     f.write(res)
+
 def encryptStorageRaw(f, jsonData, key):
     cipherkey = unhexlify(key)
-    
+    res = encryptRaw(jsonData, cipherkey)
+    f.write(res)
+
+def encryptRaw(data, cipherkey):
+    output = ''
     iv = os.urandom(12)
-    #tag = os.urandom(16)
-    f.write(iv)
+    output += iv
     cipher = Cipher(algorithms.AES(cipherkey), modes.GCM(iv), backend=default_backend())
     encryptor = cipher.encryptor()
     block = ''
     offest = 0
     res = ''
     while True:
-        block = jsonData[offest:offest+16]
+        block = data[offest:offest+16]
         if len(block) == 0:
             break
         offest = offest + 16
+        block = block.encode('utf-8')
         block = encryptor.update(block)
         res = res + block
     # throws exception when the tag is wrong
     res = res + encryptor.finalize()
 
-    f.write(encryptor.tag)
-    f.write(res)
+    output += encryptor.tag
+    output += res
+    return output
 
-# File level decryption and file reading
 def encryptStorage(path, passDict, key):
     jsonData = json.dumps(passDict, separators=(',', ':'))
     with open(path, 'wb') as f:
@@ -101,6 +128,12 @@ def decryptStorageRaw(f, key):
     data = decryptor.update(data) + decryptor.finalize()
     return data
 
+
+def encryptEntryValue(nonce, val):
+    cipherkey = unhexlify(nonce)
+    output = encryptRaw(val, cipherkey)
+    return output
+
 def decryptEntryValue(nonce, val):
     cipherkey = unhexlify(nonce)
     iv = val[:12]
@@ -117,14 +150,11 @@ def decryptEntryValue(nonce, val):
         else:
             break
         # throws exception when the tag is wrong
-    data = decryptor.update(data) + decryptor.finalize()
+    data = decryptor.update(data).decode('utf-8') + decryptor.finalize().decode('utf-8')
     return json.loads(data)
 
 # Decrypt give entry nonce
 def getDecryptedNonce(client, entry):
-    print()
-    print('Waiting for TREZOR input ...')
-    print()
     if 'item' in entry:
         item = entry['item']
     else:
@@ -147,9 +177,6 @@ def getDecryptedNonce(client, entry):
 
 # Pretty print of list
 def printEntries(entries, client):
-    print('Password entries')
-    print('================')
-    print()
     for k, v in entries.items():
         print('Entry id: #%s' % k)
         print('-------------')

@@ -21,6 +21,23 @@ from trezorlib.transport_udp import UdpTransport
 
 from tpmutils import *
 
+# Pretty print of list
+def decodeEntries(entries, client):
+    for k, v in entries.items():
+        entry_id = k
+
+        plain_nonce = getDecryptedNonce(client, entries[entry_id])
+
+        pwdArr = entries[entry_id]['password']['data']
+        pwdHex = ''.join([ hex(x)[2:].zfill(2) for x in pwdArr ])
+        entries[entry_id]['password'] = decryptEntryValue(plain_nonce, unhexlify(pwdHex))
+
+        safeNoteArr = entries[entry_id]['safe_note']['data']
+        safeNoteHex = ''.join([ hex(x)[2:].zfill(2) for x in safeNoteArr ])
+        entries[entry_id]['safe_note'] = decryptEntryValue(plain_nonce, unhexlify(safeNoteHex))
+    return
+
+
 def main():
     client = TrezorClient(UdpTransport())
 
@@ -36,8 +53,15 @@ def main():
     encKey = getFileEncKey(masterKey)[2]
     # print('enckey:', encKey)
 
-    parsed_json = decryptStorageRaw(sys.stdin, encKey)
-    print(parsed_json)
+    jsonraw = decryptStorageRaw(sys.stdin, encKey)
+    
+    #sys.stdout.write(jsonraw)
+    #return
+
+    parsed_json = json.loads(jsonraw)
+    entries = parsed_json['entries']
+    decodeEntries(entries, client)
+    sys.stdout.write(json.dumps(parsed_json, separators=(',', ':')))
     
     return
 
