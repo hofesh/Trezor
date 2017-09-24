@@ -5,13 +5,21 @@
 # install python-trezor
 git clone https://github.com/trezor/python-trezor
 cd python-trezor
+# (Ubuntu only)
+sudo apt-get install libusb-1.0-0-dev
+sudo apt-get install libudev1 libudev-dev
+# install
 sudo python setup.py install
 
-# build trezor-core
-git clone https://github.com/trezor/trezor-core
+# install trezor-core
+git clone --recursive https://github.com/trezor/trezor-core.git
 cd trezor-core
-git submodule update --init
-brew install scons sdl2 sdl2_image
+# install dependencies
+sudo pip install ed25519 pyblake2
+sudo dpkg --add-architecture i386
+sudo apt-get update
+sudo apt-get install scons libsdl2-dev:i386 libsdl2-image-dev:i386 gcc-multilib
+# build
 make build_unix
 
 # run emulator
